@@ -18,6 +18,10 @@ function displayValue(value: string): string {
   return trimmed === "" ? "—" : trimmed;
 }
 
+function rating(value: number | null): string {
+  return value === null ? "—" : `${value}/10`;
+}
+
 export function buildPlaceholderReport(
   draft: AssessmentDraft,
   locale: AppLocale,
@@ -30,12 +34,12 @@ export function buildPlaceholderReport(
   const fileBaseName = `${t.reportFileBase}${datePart}`;
 
   const observationRows: Array<[string, string]> = [
-    [t.motivation, `${observations.motivation}/10`],
-    [t.encouragementNeed, `${observations.encouragementNeed}/10`],
-    [t.anxiety, `${observations.anxiety}/10`],
-    [t.concentration, `${observations.concentration}/10`],
-    [t.motorRestlessness, `${observations.motorRestlessness}/10`],
-    [t.fatigue, `${observations.fatigue}/10`],
+    [t.motivation, rating(observations.motivation)],
+    [t.encouragementNeed, rating(observations.encouragementNeed)],
+    [t.anxiety, rating(observations.anxiety)],
+    [t.concentration, rating(observations.concentration)],
+    [t.motorRestlessness, rating(observations.motorRestlessness)],
+    [t.fatigue, rating(observations.fatigue)],
     [
       t.answeredBeforeInstructions,
       observed(observations.answeredBeforeInstructions, t),

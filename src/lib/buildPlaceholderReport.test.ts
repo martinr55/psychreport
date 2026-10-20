@@ -2,8 +2,12 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { EMPTY_ASSESSMENT } from "@/data/emptyAssessment";
+import { SYNTHETIC_ASSESSMENT, SYNTHETIC_WAIS_ENTRY } from "@/data/syntheticCase";
 import { MESSAGES } from "@/i18n/messages";
 import { buildPlaceholderReport } from "@/lib/buildPlaceholderReport";
+import { assembleReport } from "@/lib/report/assembleReport";
+import { waisInputFromEntry } from "@/lib/waisEntry";
+import { calculateWais3 } from "@/scoring/wais3/calculate";
 import { createReportDocxBlob } from "@/lib/export/downloadReportDocx";
 import { createReportPdfBlob } from "@/lib/export/downloadReportPdf";
 
@@ -61,6 +65,30 @@ describe("buildPlaceholderReport", () => {
 
   it("creates an OOXML document blob locally", async () => {
     const report = buildPlaceholderReport(EMPTY_ASSESSMENT, "et", MESSAGES.et);
+    const blob = await createReportDocxBlob(report);
+    expect(blob.size).toBeGreaterThan(2000);
+    const header = await blob.slice(0, 2).text();
+    expect(header).toBe("PK");
+  });
+
+  it("creates a DOCX blob from a calculator-backed report", async () => {
+    const report = assembleReport({
+      info: SYNTHETIC_ASSESSMENT.info,
+      result: calculateWais3(
+        waisInputFromEntry(
+          SYNTHETIC_ASSESSMENT.info.examineeAgeYears,
+          SYNTHETIC_WAIS_ENTRY,
+        ),
+      ),
+      sections: {
+        background: ["Taust."],
+        testBehavior: ["Käitumine."],
+        interpretation: ["Tõlgendus."],
+        conclusions: ["Järeldus."],
+        recommendations: ["Soovitus."],
+      },
+      eek2: SYNTHETIC_ASSESSMENT.eek2,
+    });
     const blob = await createReportDocxBlob(report);
     expect(blob.size).toBeGreaterThan(2000);
     const header = await blob.slice(0, 2).text();

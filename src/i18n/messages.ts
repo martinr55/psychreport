@@ -13,9 +13,7 @@ export interface AppMessages {
   wiscPlaceholderTitle: string;
   wiscPlaceholderBody: string;
   wiscPlaceholderItems: string[];
-  eekPlaceholderTitle: string;
-  eekPlaceholderBody: string;
-  eekPlaceholderItems: string[];
+  eekScoreHint: string;
   clearAll: string;
   mandatoryFieldsHint: string;
   caseEyebrow: string;
@@ -80,6 +78,15 @@ export interface AppMessages {
   reportRecommendations: string;
   reportConclusions: string;
   reportNoneRecorded: string;
+  generatingReport: string;
+  regenerateReport: string;
+  regenerateConfirm: string;
+  reportDraftHint: string;
+  loadSyntheticCase: string;
+  loadSyntheticConfirm: string;
+  syntheticCaseHint: string;
+  notRated: string;
+  clearRating: string;
 }
 
 export const MESSAGES: Record<AppLocale, AppMessages> = {
@@ -102,15 +109,8 @@ export const MESSAGES: Record<AppLocale, AppMessages> = {
       "Kuubikud",
       "Kujundite kaalumine",
     ],
-    eekPlaceholderTitle: "EEK-2",
-    eekPlaceholderBody:
-      "EEK-2 (emotsionaalse enesetunde küsimustik) sisestus lisatakse siia hiljem. See vahekaart on praegu kohatäide.",
-    eekPlaceholderItems: [
-      "Depressioon",
-      "Ärevus",
-      "Agorafoobia-paanika",
-      "Väsimus",
-    ],
+    eekScoreHint:
+      "Sisesta EEK-2 alaskaala koondskoor. Tühi väli jäetakse aruandest välja.",
     clearAll: "tühjenda kõik",
     mandatoryFieldsHint: "* Tärniga märgitud väljad on kohustuslikud.",
     caseEyebrow: "Üldandmed",
@@ -175,6 +175,18 @@ export const MESSAGES: Record<AppLocale, AppMessages> = {
     reportRecommendations: "Soovitused edasiseks raviks ja/või uuringuteks",
     reportConclusions: "Järeldused ja soovitused",
     reportNoneRecorded: "Märkimata.",
+    generatingReport: "Koostan aruannet…",
+    regenerateReport: "Koosta uuesti",
+    regenerateConfirm:
+      "Uus aruanne asendab praeguse teksti, sealhulgas tehtud muudatused. Kas jätkan?",
+    reportDraftHint:
+      "Mustand, mida peab üle vaatama kvalifitseeritud spetsialist. Lõikude teksti saab muuta. Tabelid tulevad WAIS-III kalkulaatorist.",
+    loadSyntheticCase: "Laadi näidisjuhtum",
+    loadSyntheticConfirm:
+      "Näidisjuhtum asendab sisestatud andmed ja praeguse aruande. Kas jätkan?",
+    syntheticCaseHint: "Näidisjuhtum on väljamõeldud ja mõeldud ainult proovimiseks.",
+    notRated: "hindamata",
+    clearRating: "Tühista hinnang",
   },
   en: {
     clinicalWorkspace: "Clinical workspace",
@@ -195,15 +207,8 @@ export const MESSAGES: Record<AppLocale, AppMessages> = {
       "Block Design",
       "Figure Weights",
     ],
-    eekPlaceholderTitle: "EST-Q2",
-    eekPlaceholderBody:
-      "EST-Q2 (Emotional State Questionnaire) entry will be added here later. This tab is a placeholder for now.",
-    eekPlaceholderItems: [
-      "Depression",
-      "Anxiety",
-      "Agoraphobia-panic",
-      "Fatigue",
-    ],
+    eekScoreHint:
+      "Enter an EEK-2 subscale total. An empty field is left out of the report.",
     clearAll: "clear all",
     mandatoryFieldsHint: "* Fields marked with an asterisk are mandatory.",
     caseEyebrow: "General information",
@@ -268,5 +273,17 @@ export const MESSAGES: Record<AppLocale, AppMessages> = {
     reportRecommendations: "Recommendations for further treatment and/or assessment",
     reportConclusions: "Conclusions and recommendations",
     reportNoneRecorded: "None recorded.",
+    generatingReport: "Generating report…",
+    regenerateReport: "Regenerate",
+    regenerateConfirm:
+      "A new report will replace the current text, including your edits. Continue?",
+    reportDraftHint:
+      "Draft for review by a qualified clinician. Section text can be edited. Tables come from the WAIS-III calculator.",
+    loadSyntheticCase: "Load sample case",
+    loadSyntheticConfirm:
+      "The sample case will replace the entered data and the current report. Continue?",
+    syntheticCaseHint: "The sample case is fictional and is only for trying the draft.",
+    notRated: "not rated",
+    clearRating: "Clear rating",
   },
 };

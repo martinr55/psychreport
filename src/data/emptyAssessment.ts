@@ -1,4 +1,5 @@
 import { WAIS_SUBTESTS } from "@/data/waisSubtests";
+import { EMPTY_EEK2 } from "@/data/eek2Scales";
 import type { AssessmentDraft } from "@/types/assessment";
 
 export const EMPTY_ASSESSMENT: AssessmentDraft = {
@@ -17,13 +18,14 @@ export const EMPTY_ASSESSMENT: AssessmentDraft = {
     id: subtest.id,
     scaledScore: "",
   })),
+  eek2: EMPTY_EEK2,
   observations: {
-    motivation: 5,
-    encouragementNeed: 5,
-    anxiety: 5,
-    concentration: 5,
-    motorRestlessness: 5,
-    fatigue: 5,
+    motivation: null,
+    encouragementNeed: null,
+    anxiety: null,
+    concentration: null,
+    motorRestlessness: null,
+    fatigue: null,
     answeredBeforeInstructions: false,
     hesitatedALot: false,
     otherNotes: "",

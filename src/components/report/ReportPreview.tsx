@@ -8,13 +8,22 @@ import type { ReportDocument } from "@/types/reportDocument";
 
 interface ReportPreviewProps {
   report: ReportDocument | null;
+  generating: boolean;
+  errors: string[];
   onGenerate: () => void;
+  onReportChange: (report: ReportDocument) => void;
 }
 
 const secondaryButtonClassName =
   "inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-md border border-teal-800 bg-white px-4 py-2.5 text-sm font-semibold text-teal-900 shadow-sm transition hover:bg-teal-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400 disabled:hover:bg-white";
 
-export function ReportPreview({ report, onGenerate }: ReportPreviewProps) {
+export function ReportPreview({
+  report,
+  generating,
+  errors,
+  onGenerate,
+  onReportChange,
+}: ReportPreviewProps) {
   const { t } = useLocale();
   const [downloading, setDownloading] = useState<"docx" | "pdf" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +68,18 @@ export function ReportPreview({ report, onGenerate }: ReportPreviewProps) {
               {t.reportPreviewTitle}
             </h2>
           </div>
-          <GenerateReportButton label={t.generateReport} onGenerate={onGenerate} />
+          <GenerateReportButton
+            label={
+              generating
+                ? t.generatingReport
+                : report
+                  ? t.regenerateReport
+                  : t.generateReport
+            }
+            disabled={generating}
+            busy={generating}
+            onGenerate={onGenerate}
+          />
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -84,10 +104,23 @@ export function ReportPreview({ report, onGenerate }: ReportPreviewProps) {
           </button>
         </div>
         {error ? <p className="text-sm text-red-700">{error}</p> : null}
+        {errors.length > 0 ? (
+          <ul className="list-disc space-y-1 pl-5 text-sm text-red-700">
+            {errors.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
+        ) : null}
       </div>
       <div className="flex-1 overflow-auto bg-[#fbfaf6] px-5 py-4">
+        {generating ? (
+          <p className="mb-3 text-sm text-teal-900">{t.generatingReport}</p>
+        ) : null}
         {report ? (
-          <ReportDocumentView report={report} />
+          <>
+            <p className="mb-3 text-sm leading-6 text-slate-600">{t.reportDraftHint}</p>
+            <ReportDocumentView report={report} onChange={onReportChange} />
+          </>
         ) : (
           <p className="font-serif text-[15px] leading-7 text-slate-600">
             {t.reportEmpty}

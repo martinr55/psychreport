@@ -1,3 +1,5 @@
+import type { Eek2Scores } from "@/data/eek2Scales";
+
 export const EDUCATION_LEVELS = [
   "primary",
   "basic",
@@ -29,12 +31,12 @@ export interface SubtestScore {
 }
 
 export interface StructuredObservations {
-  motivation: number;
-  encouragementNeed: number;
-  anxiety: number;
-  concentration: number;
-  motorRestlessness: number;
-  fatigue: number;
+  motivation: number | null;
+  encouragementNeed: number | null;
+  anxiety: number | null;
+  concentration: number | null;
+  motorRestlessness: number | null;
+  fatigue: number | null;
   answeredBeforeInstructions: boolean;
   hesitatedALot: boolean;
   otherNotes: string;
@@ -45,9 +47,12 @@ export interface Conclusions {
   recommendations: string;
 }
 
+export type { Eek2Scores };
+
 export interface AssessmentDraft {
   info: AssessmentInfo;
   scores: SubtestScore[];
+  eek2: Eek2Scores;
   observations: StructuredObservations;
   conclusions: Conclusions;
 }

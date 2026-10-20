@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
-import { displayMaybe, parseOptionalNumber } from "@/components/calculator/format";
+import { useMemo, type ReactNode } from "react";
+import { displayMaybe } from "@/components/calculator/format";
 import "@/components/calculator/wais-sheet.css";
 import { CALCULATOR_COPY } from "@/i18n/calculatorCopy";
 import { useLocale } from "@/i18n/LocaleProvider";
-import { calculateWais3, emptyWais3Input } from "@/scoring/wais3/calculate";
+import { waisInputFromEntry, type WaisScoreEntry } from "@/lib/waisEntry";
+import { calculateWais3 } from "@/scoring/wais3/calculate";
 import { MANDATORY_COUNT, STRENGTH_ORDER } from "@/scoring/wais3/tables";
-import type { OptionalNumber, Wais3Input } from "@/scoring/wais3/types";
+import type { OptionalNumber } from "@/scoring/wais3/types";
 
 const SCALED_COLUMNS = ["C", "D", "E", "F", "G", "H"] as const;
 
@@ -27,20 +28,6 @@ const ACTIVE_COLUMNS: Record<number, string[]> = {
   12: ["C", "G"],
   13: ["D"],
 };
-
-function toInput(
-  age: number | "",
-  rawScores: string[],
-  longestForward: string,
-  longestBackward: string,
-): Wais3Input {
-  return {
-    age: age === "" ? null : age,
-    rawScores: rawScores.map(parseOptionalNumber),
-    longestForward: parseOptionalNumber(longestForward),
-    longestBackward: parseOptionalNumber(longestBackward),
-  };
-}
 
 function Output({
   value,
@@ -69,19 +56,18 @@ function Sheet({ children }: { children: ReactNode }) {
 
 interface WaisCalculatorProps {
   age: number | "";
+  entry: WaisScoreEntry;
+  onChange: (entry: WaisScoreEntry) => void;
 }
 
-export function WaisCalculator({ age }: WaisCalculatorProps) {
+export function WaisCalculator({ age, entry, onChange }: WaisCalculatorProps) {
   const { locale, t } = useLocale();
   const copy = CALCULATOR_COPY[locale];
-  const empty = emptyWais3Input();
-  const [rawScores, setRawScores] = useState(empty.rawScores.map(() => ""));
-  const [longestForward, setLongestForward] = useState("");
-  const [longestBackward, setLongestBackward] = useState("");
+  const { rawScores, longestForward, longestBackward } = entry;
 
   const result = useMemo(
-    () => calculateWais3(toInput(age, rawScores, longestForward, longestBackward)),
-    [age, rawScores, longestForward, longestBackward],
+    () => calculateWais3(waisInputFromEntry(age, entry)),
+    [age, entry],
   );
 
   const hasRawInput = rawScores.some((value) => value !== "");
@@ -96,15 +82,20 @@ export function WaisCalculator({ age }: WaisCalculatorProps) {
   });
 
   function updateRaw(index: number, value: string) {
-    setRawScores((current) =>
-      current.map((item, itemIndex) => (itemIndex === index ? value : item)),
-    );
+    onChange({
+      ...entry,
+      rawScores: rawScores.map((item, itemIndex) =>
+        itemIndex === index ? value : item,
+      ),
+    });
   }
 
   function clearAll() {
-    setRawScores(empty.rawScores.map(() => ""));
-    setLongestForward("");
-    setLongestBackward("");
+    onChange({
+      rawScores: rawScores.map(() => ""),
+      longestForward: "",
+      longestBackward: "",
+    });
   }
 
   const composites = [
@@ -441,7 +432,9 @@ export function WaisCalculator({ age }: WaisCalculatorProps) {
                 aria-label={copy.longestForward}
                 inputMode="numeric"
                 value={longestForward}
-                onChange={(event) => setLongestForward(event.target.value)}
+                onChange={(event) =>
+                  onChange({ ...entry, longestForward: event.target.value })
+                }
               />
             </td>
             <td className="blocked-cell" />
@@ -460,7 +453,9 @@ export function WaisCalculator({ age }: WaisCalculatorProps) {
                 aria-label={copy.longestBackward}
                 inputMode="numeric"
                 value={longestBackward}
-                onChange={(event) => setLongestBackward(event.target.value)}
+                onChange={(event) =>
+                  onChange({ ...entry, longestBackward: event.target.value })
+                }
               />
             </td>
             <td className="blocked-cell" />

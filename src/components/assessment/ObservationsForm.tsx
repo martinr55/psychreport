@@ -36,7 +36,9 @@ export function ObservationsForm({ value, onChange }: ObservationsFormProps) {
           <Field
             key={key}
             id={`observation-${key}`}
-            label={`${t[key as keyof AppMessages]}: ${value[key]}/10`}
+            label={`${t[key as keyof AppMessages]}: ${
+              value[key] === null ? t.notRated : `${value[key]}/10`
+            }`}
           >
             <input
               id={`observation-${key}`}
@@ -44,9 +46,19 @@ export function ObservationsForm({ value, onChange }: ObservationsFormProps) {
               min={1}
               max={10}
               className="w-full accent-teal-800"
-              value={value[key]}
+              aria-valuetext={value[key] === null ? t.notRated : String(value[key])}
+              value={value[key] ?? 5}
               onChange={(event) => update(key, Number(event.target.value))}
             />
+            {value[key] !== null ? (
+              <button
+                type="button"
+                className="self-start text-xs font-medium text-teal-800 underline-offset-2 hover:underline"
+                onClick={() => update(key, null)}
+              >
+                {t.clearRating}
+              </button>
+            ) : null}
           </Field>
         ))}
       </div>
