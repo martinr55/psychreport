@@ -22,8 +22,6 @@ import type { Wais3Result } from "@/scoring/wais3/types";
 export const REPORT_TITLE = "Kognitiivse hindamise aruanne";
 
 export const REPORT_HEADINGS = {
-  identity: "Üldandmed",
-  background: "Taust ja suunamine",
   behavior: "Testikäitumine",
   results: "Kognitiivsed tulemused",
   eek2: "EEK-2",
@@ -33,7 +31,6 @@ export const REPORT_HEADINGS = {
 } as const;
 
 const SECTION_FALLBACK: Record<keyof ReportSections, string> = {
-  background: "Taustaandmeid ei ole sisestatud.",
   testBehavior: "Testikäitumist ei ole kirjeldatud.",
   interpretation: "Tõlgendust ei õnnestunud koostada.",
   conclusions: "Järeldusi ei ole sisestatud.",
@@ -66,23 +63,32 @@ function label(text: string): ReportBlock {
   return { type: "paragraph", runs: [{ text, bold: true }] };
 }
 
-function identifyingRows(info: AssessmentInfo): string[][] {
+function caseLine(label: string, value: string): ReportBlock | null {
+  const text = value.trim();
+  if (text === "") {
+    return null;
+  }
+  return { type: "paragraph", runs: [{ text: `${label}: ${text}` }] };
+}
+
+function caseLines(info: AssessmentInfo): ReportBlock[] {
   const education =
-    info.education === "" ? null : educationLabel(info.education, "et", "");
-  const candidates: Array<[string, string | null]> = [
-    ["Uuritav", info.examineeName.trim() || null],
-    [
+    info.education === "" ? "" : educationLabel(info.education, "et", "");
+  const lines: Array<ReportBlock | null> = [
+    caseLine("Uuritav", info.examineeName),
+    caseLine("Psühholoog", info.clinicianName),
+    caseLine(
       "Vanus",
-      info.examineeAgeYears === "" ? null : String(info.examineeAgeYears),
-    ],
-    ["Hindamise kuupäev", formatAssessmentDate(info.assessmentDate)],
-    ["Hindaja", info.clinicianName.trim() || null],
-    ["Suunaja", info.referrer.trim() || null],
-    ["Haridus", education || null],
+      info.examineeAgeYears === "" ? "" : String(info.examineeAgeYears),
+    ),
+    caseLine("Haridus", education),
+    caseLine("Suunaja", info.referrer),
+    caseLine("Hindamise kuupäev", formatAssessmentDate(info.assessmentDate) ?? ""),
+    caseLine("Suunamise põhjus", info.referralQuestion),
+    caseLine("Psühhosotsiaalne taust", info.psychosocialBackground),
+    caseLine("Toimetulekuraskused ja sümptomid", info.copingDifficulties),
   ];
-  return candidates.flatMap(([field, value]) =>
-    value ? [[field, value]] : [],
-  );
+  return lines.filter((line): line is ReportBlock => line !== null);
 }
 
 function strengthIntro(profile: StrengthProfile): string {
@@ -135,38 +141,19 @@ export function assembleReport(args: {
   const discrepancies = discrepancyFacts(result);
   const strengths = strengthProfile(result);
   const span = digitSpanFacts(result);
-  const identity = identifyingRows(info);
   const datePart = info.assessmentDate.trim()
     ? `-${info.assessmentDate.trim()}`
     : "";
 
   const blocks: ReportBlock[] = [
-    { type: "title", runs: [{ text: REPORT_TITLE, bold: true }] },
-    heading(REPORT_HEADINGS.identity),
-  ];
-
-  if (identity.length > 0) {
-    blocks.push({
-      type: "table",
-      headers: ["Väli", "Väärtus"],
-      rows: identity,
-    });
-  } else {
-    blocks.push(
-      ...paragraphBlocksFromText("Identifitseerivaid andmeid ei ole sisestatud."),
-    );
-  }
-
-  blocks.push(
-    heading(REPORT_HEADINGS.background),
-    ...sectionParagraphs(sections, "background"),
+    ...caseLines(info),
     heading(REPORT_HEADINGS.behavior),
     ...sectionParagraphs(sections, "testBehavior"),
     heading(REPORT_HEADINGS.results),
     ...paragraphBlocksFromText(
       "Järgmised skoorid on arvutatud WAIS-III kalkulaatoriga. Keelemudel skoore ei arvutanud ega muutnud.",
     ),
-  );
+  ];
 
   if (composites.length > 0) {
     blocks.push(label("Indeksid"), {

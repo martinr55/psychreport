@@ -81,7 +81,6 @@ describe("buildPlaceholderReport", () => {
         ),
       ),
       sections: {
-        background: ["Taust."],
         testBehavior: ["Käitumine."],
         interpretation: ["Tõlgendus."],
         conclusions: ["Järeldus."],

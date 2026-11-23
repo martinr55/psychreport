@@ -49,11 +49,10 @@ export async function POST(request: Request) {
   try {
     const sections = await generateReportSections(
       buildReportContext({
-        info: parsed.value.info,
         observations: parsed.value.observations,
         conclusions: parsed.value.conclusions,
-        eek2: parsed.value.eek2,
         result,
+        eek2: parsed.value.eek2,
       }),
     );
     const report = assembleReport({

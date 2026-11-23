@@ -31,25 +31,54 @@ describe("report generation data", () => {
   it("sends calculator results and omits data the case does not contain", () => {
     const result = calculateWais3(workbookInput);
     const context = buildReportContext({
-      info: SYNTHETIC_ASSESSMENT.info,
       observations: {
         ...SYNTHETIC_ASSESSMENT.observations,
         motivation: null,
       },
       conclusions: SYNTHETIC_ASSESSMENT.conclusions,
-      eek2: { ...SYNTHETIC_ASSESSMENT.eek2, insomnia: null },
       result,
+      eek2: SYNTHETIC_ASSESSMENT.eek2,
     });
+    const serialized = JSON.stringify(context);
 
     expect(context.language).toBe("et");
-    expect(context.notCollected).toEqual([
-      "subtestSpecificObservations",
-      "wisc5",
+    expect(serialized).not.toContain("Näidis Uuritav");
+    expect(serialized).not.toContain("Näidis Psühholoog");
+    expect(serialized).not.toContain("raamatupidajana");
+    expect(serialized).not.toContain("mälu- ja keskendumisraskuste");
+    expect(serialized).not.toContain("rawScore");
+    expect(context.eek2).toEqual({
+      instrument: "EEK-2",
+      scores: [
+        { scale: "Depressioon", score: "14" },
+        { scale: "Üldine ärevus", score: "11" },
+        { scale: "Paanika/agorafoobia", score: "3" },
+        { scale: "Sotsiaalfoobia", score: "2" },
+        { scale: "Asteenia", score: "10" },
+        { scale: "Insomnia", score: "8" },
+      ],
+    });
+    expect(
+      buildReportContext({
+        observations: SYNTHETIC_ASSESSMENT.observations,
+        conclusions: SYNTHETIC_ASSESSMENT.conclusions,
+        result,
+        eek2: {
+          depression: null,
+          generalAnxiety: null,
+          panicAgoraphobia: null,
+          socialPhobia: null,
+          asthenia: null,
+          insomnia: null,
+        },
+      }).eek2,
+    ).toBeNull();
+    expect(context.observations.freeText).toContain("Aritmeetikaülesannete ajal");
+    expect(context.clinicianConclusions.referralOpinion).toContain("Diagnoosi");
+    expect(context.observations.checklist).toEqual([
+      { label: "Vastas enne ülesande ärakuulamist", checked: false },
+      { label: "Kõhkles palju", checked: true },
     ]);
-    expect(context.eek2?.scores).toEqual(
-      expect.arrayContaining([{ scale: "Depressioon", score: "14" }]),
-    );
-    expect(context.eek2?.scores.map((item) => item.scale)).not.toContain("Insomnia");
     expect(context.wais3.precalculated).toBe(true);
     expect(context.wais3.composites.find((item) => item.id === "fsiq")).toMatchObject({
       indexScore: "107",
@@ -75,9 +104,7 @@ describe("report generation data", () => {
     expect(context.observations.structuredRatings?.items.map((item) => item.label)).not.toContain(
       "Motiveeritus",
     );
-    expect(context.observations.observedBehaviors).toEqual(["Kõhkles palju"]);
-    expect(context.notProvided).not.toContain("reportedComplaints");
-    expect(context.notProvided).not.toContain("structuredRatings");
+    expect(context.wais3.subtests[0]).not.toHaveProperty("rawScore");
   });
 
   it("keeps score tables independent of the model text", () => {
@@ -86,7 +113,6 @@ describe("report generation data", () => {
       info: SYNTHETIC_ASSESSMENT.info,
       result,
       sections: {
-        background: ["Taustalõik."],
         testBehavior: ["Vaatluslõik."],
         interpretation: ["Tõlgenduslõik näidis."],
         conclusions: ["Järelduslõik."],
@@ -100,8 +126,6 @@ describe("report generation data", () => {
       block.type === "heading" ? [block.runs[0]?.text] : [],
     );
     expect(headings).toEqual([
-      REPORT_HEADINGS.identity,
-      REPORT_HEADINGS.background,
       REPORT_HEADINGS.behavior,
       REPORT_HEADINGS.results,
       REPORT_HEADINGS.eek2,
@@ -109,6 +133,14 @@ describe("report generation data", () => {
       REPORT_HEADINGS.conclusions,
       REPORT_HEADINGS.recommendations,
     ]);
+    expect(report.blocks[0]).toEqual({
+      type: "paragraph",
+      runs: [{ text: "Uuritav: Näidis Uuritav" }],
+    });
+    expect(report.blocks[1]).toEqual({
+      type: "paragraph",
+      runs: [{ text: "Psühholoog: Näidis Psühholoog" }],
+    });
     const scoreTable = report.blocks.find(
       (block) => block.type === "table" && block.headers[0] === "Indeks",
     );
@@ -168,14 +200,13 @@ describe("report generation data", () => {
     expect(
       parseReportSections(
         JSON.stringify({
-          background: ["  Esimene lõik.  ", ""],
           testBehavior: ["Käitumine."],
           interpretation: ["Tõlgendus."],
           conclusions: ["Järeldus."],
           recommendations: ["Soovitus."],
         }),
-      ).background,
-    ).toEqual(["Esimene lõik."]);
+      ).testBehavior,
+    ).toEqual(["Käitumine."]);
   });
 });
 

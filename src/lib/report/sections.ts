@@ -1,5 +1,4 @@
 export const REPORT_SECTION_KEYS = [
-  "background",
   "testBehavior",
   "interpretation",
   "conclusions",
