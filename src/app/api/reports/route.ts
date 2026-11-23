@@ -10,16 +10,19 @@ import {
   reportabilityMessages,
   type BilingualMessage,
 } from "@/lib/report/parseReportRequest";
+import { reserveReportCall } from "@/lib/report/usageLimit";
 
 function jsonError(
   status: number,
   error: string,
   messages: BilingualMessage[],
+  retryAfterSeconds?: number,
 ) {
-  return Response.json(
-    { error, messages },
-    { status, headers: { "Cache-Control": "no-store" } },
-  );
+  const headers: Record<string, string> = { "Cache-Control": "no-store" };
+  if (retryAfterSeconds !== undefined) {
+    headers["Retry-After"] = String(retryAfterSeconds);
+  }
+  return Response.json({ error, messages }, { status, headers });
 }
 
 export async function POST(request: Request) {
@@ -46,6 +49,35 @@ export async function POST(request: Request) {
     return jsonError(422, "incomplete_scores", blocked);
   }
 
+  const reservation = reserveReportCall();
+  if (!reservation.ok) {
+    if (reservation.reason === "daily_limit") {
+      return jsonError(
+        429,
+        "daily_limit",
+        [
+          {
+            et: "Päevane piir on 25 aruannet. Uusi aruandeid saab koostada homme.",
+            en: "The daily limit is 25 reports. New reports can be generated tomorrow.",
+          },
+        ],
+        reservation.retryAfterSeconds,
+      );
+    }
+    return jsonError(
+      429,
+      "rate_limit",
+      [
+        {
+          et: "Liiga palju aruandepäringuid. Proovi minuti pärast uuesti.",
+          en: "Too many report requests. Try again in a minute.",
+        },
+      ],
+      reservation.retryAfterSeconds,
+    );
+  }
+
+  let succeeded = false;
   try {
     const sections = await generateReportSections(
       buildReportContext({
@@ -61,6 +93,7 @@ export async function POST(request: Request) {
       sections,
       eek2: parsed.value.eek2,
     });
+    succeeded = true;
     return Response.json(
       { report },
       { headers: { "Cache-Control": "no-store" } },
@@ -83,5 +116,7 @@ export async function POST(request: Request) {
         en: "Report generation failed. Try again.",
       },
     ]);
+  } finally {
+    reservation.finish(succeeded);
   }
 }
